@@ -1,0 +1,38 @@
+name: Test
+on: push
+env:
+  DEBUG: true
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  DB_HOST: localhost
+  SECRET_KEY: secret
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: pip install poetry && poetry export -f requirements.txt --with dev --output requirements.txt && pip install -r requirements.txt
+      - name: Wake up databases
+        run: docker-compose up -d db
+      - name: Check env
+        run: echo $DEBUG
+      - name: Test
+        working-directory: src
+        run: pytest
+    strategy:
+      matrix:
+        python-version: [3.8]
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: pip install poetry && poetry export -f requirements.txt --with dev --output requirements.txt && pip install -r requirements.txt
+      - name: Black
+        working-directory: src
+        run: black --check --diff .
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
